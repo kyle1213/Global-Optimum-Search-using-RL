@@ -18,4 +18,4 @@ Trained on X^2 + Y^2 / Test on rastrigin
 
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1env2.gif)
 
-해야할 것: 현재 x^2 + y^2에서 괜찮은 성능을 보이는 것을 확인했지만 rastrigin과 같은 복잡한 모델에서 성능이 안좋아보임, 개선.
+해야할 것: 현재 x^2 + y^2에서 괜찮은 성능을 보이는 것을 확인했지만 rastrigin과 같은 복잡한 모델에서 성능이 안좋아보임, 또한 에이전트의 액션에 실수값이 아닌 (1, 1)이나 (-1, 1)처럼 부드럽지 않은 움직임만 보이는데 마음에 안드니까 개선해야 함
