@@ -11,3 +11,6 @@ global optimum search using reinforcement learning on pytorch
 loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 그걸 복제한 target model을 지표로 사용하는 이유를 모르겠음.  
 
 현재 x^2 + y^2에서 괜찮은 성능을 보이는 것을 확인하여 시각화 준비중이며, 더 복잡한 3차원 공간에서 시뮬레이션 해볼 예정
+
+
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1env1.gif)
