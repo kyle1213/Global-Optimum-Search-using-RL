@@ -338,7 +338,7 @@ if __name__ == "__main__":
             writer = animation.PillowWriter(fps=15,
                                              metadata=dict(artist='Me'),
                                              bitrate=1800)
-            anim.save('record.gif', writer=writer)
+            anim.save('./gifs/record.gif', writer=writer)
             plt.show()
 # ##라인 지우기
 # +- 5.12 넘으면 페널티 주기
