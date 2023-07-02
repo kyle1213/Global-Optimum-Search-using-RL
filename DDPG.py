@@ -187,8 +187,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env1
-    Z = Z1
+    env = env2
+    Z = Z2
 
     agents = [DDPGAgent(i) for i in range(agent_num)]
 
