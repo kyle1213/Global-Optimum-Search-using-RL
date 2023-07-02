@@ -49,10 +49,20 @@ load_path = f"./saved_models/20230626191557"
 
 x, y = sy.symbols('x y')
 
-#Z = x ** 2 + y ** 2
-Z = (x ** 2 - 10 * sy.cos(2 * sy.pi * x)) + (y ** 2 - 10 * sy.cos(2 * sy.pi * y)) + 20
-def env(x, y):  # environment
-    #return x ** 2 + y ** 2
+Z0 = x + y
+Z1 = x ** 2 + y ** 2
+Z2 = (x ** 2 - 10 * sy.cos(2 * sy.pi * x)) + (y ** 2 - 10 * sy.cos(2 * sy.pi * y)) + 20
+
+
+def env0(x, y):  # environment
+    return x + y
+
+
+def env1(x, y):  # environment
+    return x ** 2 + y ** 2
+
+
+def env2(x, y):
     return (x ** 2 - 10 * np.cos(2 * np.pi * x)) + (y ** 2 - 10 * np.cos(2 * np.pi * y)) + 20
 
 
@@ -177,7 +187,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env
+    env = env1
+    Z = Z1
 
     agents = [DDPGAgent(i) for i in range(agent_num)]
 
@@ -191,8 +202,8 @@ if __name__ == "__main__":
         done = [0 for i in range(agent_num)]
         states = []
         for i in range(agent_num): #initialize agent's actions
-            x_init = random.uniform(-100, 100)
-            y_init = random.uniform(-100, 100)
+            x_init = random.uniform(-5, 5)
+            y_init = random.uniform(-5, 5)
             states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                            float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
             # states = [x,y,z, old_x, old_y, old_z]
@@ -238,8 +249,8 @@ if __name__ == "__main__":
                 done = [0 for i in range(agent_num)]
                 states = []
                 for i in range(agent_num):
-                    x_init = random.uniform(-100, 100)
-                    y_init = random.uniform(-100, 100)
+                    x_init = random.uniform(-5, 5)
+                    y_init = random.uniform(-5, 5)
                     states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                          float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
                 count_step = [0 for i in range(agent_num)]
@@ -269,8 +280,8 @@ if __name__ == "__main__":
         done = [0 for i in range(agent_num)]
         states = []
         for i in range(agent_num):
-            x_init = random.uniform(-100, 100)
-            y_init = random.uniform(-100, 100)
+            x_init = random.uniform(-5, 5)
+            y_init = random.uniform(-5, 5)
             states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                            float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
         count_step = [0 for i in range(agent_num)]
@@ -298,33 +309,37 @@ if __name__ == "__main__":
 
             score += np.mean(reward)
         if done == [1 for i in range(agent_num)]:
-             X = np.linspace(-124, 124, 100)
-             Y = np.linspace(-124, 124, 100)
-             X, Y = np.meshgrid(X, Y)
+            X = np.linspace(-5.12, 5.12, 100)
+            Y = np.linspace(-5.12, 5.12, 100)
+            X, Y = np.meshgrid(X, Y)
 
-             fig = plt.figure()
+            fig = plt.figure()
 
-             plt.contour(X, Y, env(X, Y), levels=15)
-             cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
-             plt.colorbar(cntr)
+            plt.contour(X, Y, env(X, Y), levels=15)
+            cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
+            plt.colorbar(cntr)
 
-             #  mcolors.CSS4_COLORS[list(mcolors.CSS4_COLORS.keys())[i]]
-             #  'C'+str(i)+'o'
-             d = [plt.plot([], [], 'C' + str(i) + 'o') for i in range(agent_num)]
-             dx = []
-             dy = []
+            #  mcolors.CSS4_COLORS[list(mcolors.CSS4_COLORS.keys())[i]]
+            #  'C'+str(i)+'o'
+            d = [plt.plot([], [], 'C' + str(i) + 'o') for i in range(agent_num)]
+            dx = []
+            dy = []
 
-             def animate(i):
-                 dx.append([agents[j].memory[i][0][0] for j in range(agent_num)])
-                 dy.append([agents[j].memory[i][0][1] for j in range(agent_num)])
-                 for j, d_ in enumerate(d):
-                     d_[0].set_data(dx[i][j], dy[i][j])
-                 return d
+            def animate(i):
+                dx.append([agents[j].memory[i][0][0] for j in range(agent_num)])
+                dy.append([agents[j].memory[i][0][1] for j in range(agent_num)])
+                for j, d_ in enumerate(d):
+                    d_[0].set_data(dx[i][j], dy[i][j])
+                return d
 
 
-             anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+            anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
 
-             plt.show()
+            writer = animation.PillowWriter(fps=15,
+                                             metadata=dict(artist='Me'),
+                                             bitrate=1800)
+            anim.save('record.gif', writer=writer)
+            plt.show()
 # ##라인 지우기
 # +- 5.12 넘으면 페널티 주기
 # reward 개선
