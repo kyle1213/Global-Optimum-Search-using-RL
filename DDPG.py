@@ -17,8 +17,6 @@ import sympy as sy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-agent_num = 1
-
 max_episode_steps = 500
 batch_size = 128
 mem_maxlen = 25000
@@ -37,15 +35,15 @@ mu = 0
 theta = 1e-3
 sigma = 2e-3
 
-load_model = True # True for test, False for train
+load_model = True  # True for test, False for train
 train_mode = True if not load_model else False
-test_step = 500
+test_step = max_episode_steps
 print_interval = 10
 save_interval = 100
 
 date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
-load_path = f"./saved_models/env1"
+load_path = f"./saved_models/env2"
 
 x, y = sy.symbols('x y')
 
@@ -110,7 +108,7 @@ class Critic(torch.nn.Module):
 
 
 class DDPGAgent():
-    def __init__(self, i):
+    def __init__(self):
         self.actor = Actor().to(device)
         self.target_actor = copy.deepcopy(self.actor)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=actor_lr)
@@ -121,9 +119,9 @@ class DDPGAgent():
         self.memory = deque(maxlen=mem_maxlen)
         self.writer = SummaryWriter(save_path) if load_model == False else None
 
-        if load_model == True:
-            print(f"... Load Model from {load_path}/"+str(i)+".ckpt ...")
-            checkpoint = torch.load(load_path+"/"+str(i)+".ckpt", map_location=device)
+        if load_model:
+            print(f"... Load Model from {load_path}/model.ckpt ...")
+            checkpoint = torch.load(load_path+"/model.ckpt", map_location=device)
             self.actor.load_state_dict(checkpoint["actor"])
             self.target_actor.load_state_dict(checkpoint["actor"])
             self.actor_optimizer.load_state_dict(checkpoint["actor_optimizer"])
@@ -176,9 +174,9 @@ class DDPGAgent():
         for target_param, local_param in zip(self.target_critic.parameters(), self.critic.parameters()):
             target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
 
-    def save_model(self, i):
-        print(f" ... Save  "+str(i)+"th Model to {save_path}/ckpt ...")
-        torch.save({"actor": self.actor.state_dict(), "actor_optimizer": self.actor_optimizer.state_dict(), "critic": self.critic.state_dict(), "critic_optimizer": self.critic_optimizer.state_dict(),}, save_path+'/'+str(i)+'.ckpt')
+    def save_model(self):
+        print(f" ... Save Model to {save_path}/ckpt ...")
+        torch.save({"actor": self.actor.state_dict(), "actor_optimizer": self.actor_optimizer.state_dict(), "critic": self.critic.state_dict(), "critic_optimizer": self.critic_optimizer.state_dict(),}, save_path+'/model.ckpt')
 
     def write_summary(self, score, actor_loss, critic_loss, step):
         self.writer.add_scalar("run/score", score, step)
@@ -187,157 +185,160 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env1
-    Z = Z1
+    env = env2
+    Z = Z2
 
-    agents = [DDPGAgent(i) for i in range(agent_num)]
+    agent = DDPGAgent()
 
-    actor_losses, critic_losses, scores, episode, score = [[] for _ in range(agent_num)], [[] for _ in range(
-        agent_num)], [], 0, 0
+    actor_losses_per_run, critic_losses_per_run = [], []
+    actor_losses, critic_losses, scores, episode, score = [], [], [], 0, 0
+    iterations = []
 
     if train_mode:
         # initialize
-        actions = [[] for i in range(agent_num)]
-        reward = [0 for i in range(agent_num)]
-        done = [0 for i in range(agent_num)]
-        states = []
-        for i in range(agent_num): #initialize agent's actions
-            x_init = random.uniform(-5, 5)
-            y_init = random.uniform(-5, 5)
-            states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                           float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
-            # states = [x,y,z, dx, dy]
-        count_step = [0 for i in range(agent_num)]
+        actions = []
+        reward = 0
+        done = 0
+        x_init = random.uniform(-5, 5)
+        y_init = random.uniform(-5, 5)
+        states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
+                  float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
+        # states = [x,y,z, dx, dy]
+        count_step = 0
 
         for step in range(run_step):
-            for i in range(agent_num):
-                if done[i] == 0:  # not finished
-                    count_step[i] += 1
-                    actions[i] = agents[i].get_action(states[i], train_mode)
+            if done == 0:  # not finished
+                count_step += 1
+                actions = agent.get_action(states, train_mode)
 
-                    old_states = copy.deepcopy(states)
+                old_states = copy.deepcopy(states)
 
-                    states[i][0] += actions[i][0][0]
-                    states[i][1] += actions[i][0][1]
+                states[0] += actions[0][0]
+                states[1] += actions[0][1]
 
-                    states[i][2] = env(states[i][0], states[i][1])
-                    states[i][3] = float(sy.diff(Z, x).evalf(subs={x: states[i][0], y: states[i][1]}))
-                    states[i][4] = float(sy.diff(Z, y).evalf(subs={x: states[i][0], y: states[i][1]}))
+                states[2] = env(states[0], states[1])
+                states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
+                states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
-                    reward[i] = env(old_states[i][0], old_states[i][1]) - env(states[i][0], states[i][1])
+                reward = env(old_states[0], old_states[1]) - env(states[0], states[1])
 
-                    ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
+                ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
-                    if count_step[i] >= max_episode_steps:
-                        done[i] = 1
-                    agents[i].append_sample(old_states[i], copy.deepcopy(actions[i]), reward[i], copy.deepcopy(states[i]), done[i])
+                if count_step >= max_episode_steps:
+                    done = 1
+                agent.append_sample(old_states, copy.deepcopy(actions), reward, copy.deepcopy(states), done)
 
-                    if step > train_start_step:
-                        actor_loss, critic_loss = agents[i].train_model()
-                        actor_losses[i].append(actor_loss)
-                        critic_losses[i].append(critic_loss)
+                if step > train_start_step:
+                    actor_loss, critic_loss = agent.train_model()
+                    actor_losses_per_run.append(actor_loss)
+                    critic_losses_per_run.append(critic_loss)
 
-                        agents[i].soft_update_target()
+                    agent.soft_update_target()
 
-            score += np.mean(reward) #score is sum of mean of all agent's reward
+            score += reward
 
-            if done == [1 for i in range(agent_num)]:
-                actions = [[] for i in range(agent_num)]
-                reward = [0 for i in range(agent_num)]
-                done = [0 for i in range(agent_num)]
-                states = []
-                for i in range(agent_num):
-                    x_init = random.uniform(-5, 5)
-                    y_init = random.uniform(-5, 5)
-                    states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                         float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
-                count_step = [0 for i in range(agent_num)]
+            if done == 1:
+                actions = []
+                reward = 0
+                done = 0
+                x_init = random.uniform(-5, 5)
+                y_init = random.uniform(-5, 5)
+                states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
+                               float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
+                count_step = 0
 
                 episode += 1
                 scores.append(score)
+
+                mean_actor_loss = np.mean(actor_losses_per_run)
+                mean_critic_loss = np.mean(critic_losses_per_run)
+                agent.write_summary(score, mean_actor_loss, mean_critic_loss, step)
+
+                actor_losses.append(mean_actor_loss)
+                critic_losses.append(mean_critic_loss)
+
+                print(f"{episode} Episode / Step: {step} / Score: {score:.2f} / " + f"Actor loss: {mean_actor_loss:.2f} / Critic loss: {mean_critic_loss:.4f}")
+
+                if train_mode and episode % save_interval == 0:
+                    agent.save_model()
+
+                iterations.append(step)
                 score = 0
 
-                if episode % print_interval == 0:
-                    mean_score = np.mean(scores)
-                    mean_actor_loss = np.mean(actor_losses)
-                    mean_critic_loss = np.mean(critic_losses)
-                    agents[0].write_summary(mean_score, np.mean(mean_actor_loss), np.mean(mean_critic_loss), step)
-
-
-                    print(
-                        f"{episode} Episode / Step: {step} / Score: {mean_score:.2f} / " + f"Actor loss: {mean_actor_loss:.2f} / Critic loss: {mean_critic_loss:.4f}")
-                    actor_losses, critic_losses, scores = [[] for _ in range(agent_num)], [[] for _ in
-                                                                                           range(agent_num)], []
-                if train_mode and episode % save_interval == 0:
-                    for i, agent in enumerate(agents):
-                        agent.save_model(i)
+        plt.subplot(121)
+        plt.plot(range(1, len(iterations) + 1), actor_losses, 'b--')
+        plt.plot(range(1, len(iterations) + 1), critic_losses, 'r--')
+        plt.subplot(122)
+        plt.plot(range(1, len(iterations) + 1), scores, 'g-')
+        plt.title('actor critic losses and scores')
+        plt.savefig('train result/result.png')
 
     else:  # test mode
-        actions = [[] for i in range(agent_num)]
-        reward = [0 for i in range(agent_num)]
-        done = [0 for i in range(agent_num)]
-        states = []
-        for i in range(agent_num):
-            x_init = random.uniform(-5, 5)
-            y_init = random.uniform(-5, 5)
-            states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                           float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
-        count_step = [0 for i in range(agent_num)]
+        # initialize
+        actions = []
+        reward = 0
+        done = 0
+        x_init = random.uniform(-5, 5)
+        y_init = random.uniform(-5, 5)
+        states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
+                  float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
 
         for step in range(test_step):
-            for i in range(agent_num):
-                if done[i] == 0:  # not finished
-                    count_step[i] += 1
-                    actions[i] = agents[i].get_action(states[i], train_mode)
+            if done == 0:  # not finished
+                actions = agent.get_action(states, train_mode)
 
-                    old_states = copy.deepcopy(states)
+                old_states = copy.deepcopy(states)
 
-                    states[i][0] += actions[i][0]
-                    states[i][1] += actions[i][1]
+                states[0] += actions[0]
+                states[1] += actions[1]
 
-                    states[i][2] = env(states[i][0], states[i][1])
-                    states[i][3] = float(sy.diff(Z, x).evalf(subs={x: states[i][0], y: states[i][1]}))
-                    states[i][4] = float(sy.diff(Z, y).evalf(subs={x: states[i][0], y: states[i][1]}))
+                states[2] = env(states[0], states[1])
+                states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
+                states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
-                    reward[i] = reward[i] = env(old_states[i][0], old_states[i][1]) - env(states[i][0], states[i][1])
+                reward = env(old_states[0], old_states[1]) - env(states[0], states[1])
 
-                    if count_step[i] >= test_step:
-                        done[i] = 1
-                    agents[i].append_sample(old_states[i], actions[i], reward[i], states[i], done[i])
+                ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
-            score += np.mean(reward)
-        if done == [1 for i in range(agent_num)]:
-            X = np.linspace(-5.12, 5.12, 100)
-            Y = np.linspace(-5.12, 5.12, 100)
-            X, Y = np.meshgrid(X, Y)
+                if step >= max_episode_steps - 1:
+                    done = 1
+                agent.append_sample(old_states, copy.deepcopy(actions), reward, copy.deepcopy(states), done)
 
-            fig = plt.figure()
+            score += reward
 
-            plt.contour(X, Y, env(X, Y), levels=15)
-            cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
-            plt.colorbar(cntr)
+            if done == 1:
+                X = np.linspace(-5.12, 5.12, 100)
+                Y = np.linspace(-5.12, 5.12, 100)
+                X, Y = np.meshgrid(X, Y)
 
-            #  mcolors.CSS4_COLORS[list(mcolors.CSS4_COLORS.keys())[i]]
-            #  'C'+str(i)+'o'
-            d = [plt.plot([], [], 'C' + str(i) + 'o') for i in range(agent_num)]
-            dx = []
-            dy = []
+                fig = plt.figure()
 
-            def animate(i):
-                dx.append([agents[j].memory[i][0][0] for j in range(agent_num)])
-                dy.append([agents[j].memory[i][0][1] for j in range(agent_num)])
-                for j, d_ in enumerate(d):
-                    d_[0].set_data(dx[i][j], dy[i][j])
-                return d
+                plt.contour(X, Y, env(X, Y), levels=15)
+                cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
+                plt.colorbar(cntr)
 
+                #  mcolors.CSS4_COLORS[list(mcolors.CSS4_COLORS.keys())[i]]
+                #  'C'+str(i)+'o'
+                d, = plt.plot([], [], 'C0o')
+                dx = []
+                dy = []
 
-            anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+                def animate(i):
+                    dx.append(agent.memory[i][0][0])
+                    dy.append(agent.memory[i][0][1])
+                    d.set_data(dx[i], dy[i])
 
-            writer = animation.PillowWriter(fps=15,
-                                             metadata=dict(artist='Me'),
-                                             bitrate=1800)
-            anim.save('./gifs/record.gif', writer=writer)
-            plt.show()
+                    return d,
+
+                anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+
+                writer = animation.PillowWriter(fps=15,
+                                                metadata=dict(artist='Me'),
+                                                bitrate=1800)
+
+                anim.save('./gifs/record.gif', writer=writer)
+
+                plt.show()
 
 
 # ##라인 지우기
