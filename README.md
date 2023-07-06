@@ -12,10 +12,23 @@ loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 �
 
 Trained on X^2 + Y^2 / Test on X^2 + Y^2  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1env1.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1 env1.gif)
 
 Trained on X^2 + Y^2 / Test on rastrigin  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1env2.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1 env2.gif)  
 
-해야할 것: 현재 x^2 + y^2에서 괜찮은 성능을 보이는 것을 확인했지만 rastrigin과 같은 복잡한 모델에서 성능이 안좋아보임, 또한 에이전트의 액션에 실수값이 아닌 (1, 1)이나 (-1, 1)처럼 부드럽지 않은 움직임만 보이는데 마음에 안드니까 개선해야 함
+
+Trained rastrigin / Test on X^2 + Y^2  
+
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2 env1.gif)
+
+Trained on rastrigin / Test on rastrigin  
+
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2 env2.gif)
+
+해야할 것:+ 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기
++ 지금 rastrigin 간격이 너무 좁은 듯. 더 넓히기.
++ 새 저점을 찾을 때 마다 높은 고정점수 주기
++ action 크기 더 늘려보기(for exploration)
+
