@@ -27,6 +27,9 @@ Trained on rastrigin / Test on rastrigin
 
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2%20env2.gif)
 
+
+결과 분석: rastrigin에서의 학습이 더 부드럽고 정확해보임. 물론 rastrigin에서 테스트하면 둘다 안좋음
+
 해야할 것:+ 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기
 + 지금 rastrigin 간격이 너무 좁은 듯. 더 넓히기.
 + 새 저점을 찾을 때 마다 높은 고정점수 주기
