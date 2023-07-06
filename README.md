@@ -12,20 +12,20 @@ loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 �
 
 Trained on X^2 + Y^2 / Test on X^2 + Y^2  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1 env1.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env1.gif)
 
 Trained on X^2 + Y^2 / Test on rastrigin  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1 env2.gif)  
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env2.gif)  
 
 
 Trained rastrigin / Test on X^2 + Y^2  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2 env1.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2%20env1.gif)
 
 Trained on rastrigin / Test on rastrigin  
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2 env2.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env2%20env2.gif)
 
 해야할 것:+ 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기
 + 지금 rastrigin 간격이 너무 좁은 듯. 더 넓히기.
