@@ -45,7 +45,7 @@ save_interval = 100
 
 date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
-load_path = f"./saved_models/20230626191557"
+load_path = f"./saved_models/env1"
 
 x, y = sy.symbols('x y')
 
@@ -187,8 +187,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env2
-    Z = Z2
+    env = env1
+    Z = Z1
 
     agents = [DDPGAgent(i) for i in range(agent_num)]
 
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             y_init = random.uniform(-5, 5)
             states.append([x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                            float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))])
-            # states = [x,y,z, old_x, old_y, old_z]
+            # states = [x,y,z, dx, dy]
         count_step = [0 for i in range(agent_num)]
 
         for step in range(run_step):
@@ -226,9 +226,7 @@ if __name__ == "__main__":
 
                     reward[i] = env(old_states[i][0], old_states[i][1]) - env(states[i][0], states[i][1])
 
-                    if env(states[i][0], states[i][1]) == 0:
-                        reward[i] = 10000
-                        done[i] = 1
+                    ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
                     if count_step[i] >= max_episode_steps:
                         done[i] = 1
@@ -340,14 +338,8 @@ if __name__ == "__main__":
                                              bitrate=1800)
             anim.save('./gifs/record.gif', writer=writer)
             plt.show()
-# ##라인 지우기
-# +- 5.12 넘으면 페널티 주기
-# reward 개선
-# z값 낮아지면 +1, 0되면 100, 올라가면 -1, 밖에 나가려하면 -5
-#한명이라도 0이되면 끝낼지, 끝까지 할지 정하기
-#서로 통신하지 않는 상황 (NL, naive learning)
-# 자꾸 바깥으로 나가려는 문제 해결하기
-# 쉬운 env로 테스트하기
-# single ddpg부터 구현하기
 
-#reward, state, env 등 환경과 상호작용과 관련된 부분을 개선해야함
+
+# ##라인 지우기
+
+# reward, state, env 등 환경과 상호작용과 관련된 부분을 개선해야함
