@@ -35,7 +35,8 @@ mu = 0
 theta = 1e-3
 sigma = 2e-3
 
-load_model = True  # True for test, False for train
+load_model = False  # True for test, False for train
+load_param = False  # for continous learning
 train_mode = True if not load_model else False
 test_step = max_episode_steps
 print_interval = 10
@@ -185,8 +186,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env2
-    Z = Z2
+    env = env1
+    Z = Z1
 
     agent = DDPGAgent()
 
@@ -220,7 +221,8 @@ if __name__ == "__main__":
                 states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
                 states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
-                reward = env(old_states[0], old_states[1]) - env(states[0], states[1])
+                reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
+                reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
@@ -265,6 +267,36 @@ if __name__ == "__main__":
                 iterations.append(step)
                 score = 0
 
+                # save train step gifs
+                X = np.linspace(-5.12, 5.12, 100)
+                Y = np.linspace(-5.12, 5.12, 100)
+                X, Y = np.meshgrid(X, Y)
+
+                fig = plt.figure()
+
+                plt.contour(X, Y, env(X, Y), levels=15)
+                cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
+                plt.colorbar(cntr)
+                d, = plt.plot([], [], 'C0o')
+                dx = []
+                dy = []
+
+
+                def animate(i):
+                    dx.append(agent.memory[i+len(agent.memory)-500][0][0])
+                    dy.append(agent.memory[i+len(agent.memory)-500][0][1])
+                    d.set_data(dx[i], dy[i])
+
+                    return d,
+
+                anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+
+                writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+
+                anim.save('./gifs/'+str(episode)+'.gif', writer=writer)
+
+                plt.close()
+
         plt.subplot(121)
         plt.plot(range(1, len(iterations) + 1), actor_losses, 'b--')
         plt.plot(range(1, len(iterations) + 1), critic_losses, 'r--')
@@ -296,7 +328,8 @@ if __name__ == "__main__":
                 states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
                 states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
-                reward = env(old_states[0], old_states[1]) - env(states[0], states[1])
+                reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
+                reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
@@ -323,6 +356,7 @@ if __name__ == "__main__":
                 dx = []
                 dy = []
 
+
                 def animate(i):
                     dx.append(agent.memory[i][0][0])
                     dy.append(agent.memory[i][0][1])
@@ -332,9 +366,7 @@ if __name__ == "__main__":
 
                 anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
 
-                writer = animation.PillowWriter(fps=15,
-                                                metadata=dict(artist='Me'),
-                                                bitrate=1800)
+                writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
                 anim.save('./gifs/record.gif', writer=writer)
 
