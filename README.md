@@ -1,11 +1,6 @@
 # Global-Optimum-Search-using-RL
 global optimum search using reinforcement learning on pytorch  
 
-기능:
-+ RL모델로 학습
-+ train마다 trajectory를 gif로 기록(속도에 좋지 않지만, 시각적으로 보고 싶었음)  
-+ train 후 loss, score기록, test시 model load를 하고 결과 trajectory를 gif로 기록
-
 구현 방법: 
 + 간단한 actor critic 모델로 단순한 3차 공간에서 학습을 진행하였다.  
 + reward함수는 dz*abs(dz)를 사용하였는데, 단순히 함수의 값의 변화량으로 reward를 주지 않고 변화량의 절대값을 한번 더 곱하여 더 큰 변화량에 더 큰 reward가 발생하도록 해보았다.  
