@@ -9,7 +9,8 @@ model load를 하고 결과 trajectory를 gif로 기록
 스텝마다 -0.1의 reward를 부여함. 또한 actor의 action에 early stop을 위한 노드를 하나 더 만들어 학습을 해보았다.
 
 결과 분석: 과거 정보 없이 state = (x, y, z, dx, dy)로 early stop을 학습하는 것은 어렵다는 직관이 있는 것 처럼 학습이 제대로 이루어지지
-않았다(env0에서 test시 기울기를 따라가지 않고 env1의 optimum근처인 (0,0)을 향해 가는 것을 볼 수 있다). state memory를 state에 추가하여 학습해보아야 할 것 같다.
+않았다(env0에서 test시 기울기를 따라가지 않고 env1의 optimum근처인 (0,0)을 향해 가는 것을 볼 수 있다. 근데 신기한 점은 env2에서는 그렇지 않고 
+기울기를 따라가려고 하는듯 한 모습을 보인다). state memory를 state에 추가하여 학습해보아야 할 것 같다.
 
 
 # Train results
