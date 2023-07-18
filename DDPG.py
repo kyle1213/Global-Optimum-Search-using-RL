@@ -29,13 +29,13 @@ run_step = 300000
 train_start_step = 5000
 
 state_size = 5
-action_size = 2
+action_size = 3
 
 mu = 0
 theta = 1e-3
 sigma = 2e-3
 
-load_model = False  # True for test, False for train
+load_model = True  # True for test, False for train
 load_param = False  # for continous learning
 train_mode = True if not load_model else False
 test_step = max_episode_steps
@@ -44,7 +44,7 @@ save_interval = 100
 
 date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
-load_path = f"./saved_models/env2"
+load_path = f"./saved_models/env1"
 
 x, y = sy.symbols('x y')
 
@@ -186,8 +186,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env1
-    Z = Z1
+    env = env2
+    Z = Z2
 
     agent = DDPGAgent()
 
@@ -222,11 +222,12 @@ if __name__ == "__main__":
                 states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
                 reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
-                reward -= 1
+                reward -= 0.1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
-
-                if count_step >= max_episode_steps:
+                if actions[0][2] >= 0 and random.randrange(100) < 50: # to prevent doing 'one move' and make some exploration
+                    actions[0][2] *= -1
+                if count_step >= max_episode_steps or (actions[0][2]) >= 0:
                     done = 1
                 agent.append_sample(old_states, copy.deepcopy(actions), reward, copy.deepcopy(states), done)
 
@@ -247,7 +248,6 @@ if __name__ == "__main__":
                 y_init = random.uniform(-5, 5)
                 states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                                float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
-                count_step = 0
 
                 episode += 1
                 scores.append(score)
@@ -283,19 +283,21 @@ if __name__ == "__main__":
 
 
                 def animate(i):
-                    dx.append(agent.memory[i+len(agent.memory)-500][0][0])
-                    dy.append(agent.memory[i+len(agent.memory)-500][0][1])
-                    d.set_data(dx[i], dy[i])
+                    dx.append(agent.memory[i+len(agent.memory)-count_step][0][0])
+                    dy.append(agent.memory[i+len(agent.memory)-count_step][0][1])
+                    d.set_data(dx, dy)
 
                     return d,
 
-                anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+                anim = animation.FuncAnimation(fig, animate, frames=count_step, interval=100)
 
                 writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
                 anim.save('./gifs/'+str(episode)+'.gif', writer=writer)
 
                 plt.close()
+
+                count_step = 0
 
         plt.subplot(121)
         plt.plot(range(1, len(iterations) + 1), actor_losses, 'b--')
@@ -314,9 +316,11 @@ if __name__ == "__main__":
         y_init = random.uniform(-5, 5)
         states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
                   float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
+        count_step = 0
 
         for step in range(test_step):
             if done == 0:  # not finished
+                count_step += 1
                 actions = agent.get_action(states, train_mode)
 
                 old_states = copy.deepcopy(states)
@@ -329,11 +333,11 @@ if __name__ == "__main__":
                 states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
 
                 reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
-                reward -= 1
+                reward -= 0.1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
-                if step >= max_episode_steps - 1:
+                if step >= max_episode_steps - 1 or actions[2] >= 0:
                     done = 1
                 agent.append_sample(old_states, copy.deepcopy(actions), reward, copy.deepcopy(states), done)
 
@@ -364,7 +368,7 @@ if __name__ == "__main__":
 
                     return d,
 
-                anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
+                anim = animation.FuncAnimation(fig, animate, frames=count_step, interval=100)
 
                 writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
@@ -372,7 +376,7 @@ if __name__ == "__main__":
 
                 plt.show()
 
-
+                plt.close()
 # ##라인 지우기
 
 # reward, state, env 등 환경과 상호작용과 관련된 부분을 개선해야함

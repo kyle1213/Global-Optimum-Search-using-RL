@@ -14,7 +14,8 @@ loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 �
 model load를 하고 결과 trajectory를 gif로 기록
 
 구현 방법: 간단한 actor critic 모델로 단순한 3차 공간에서 학습을 진행하였다. reward함수는 dz*abs(dz)를 사용하였는데, 단순히 
-함수의 값의 변화량으로 reward를 주지 않고 변화량의 절대값을 한번 더 곱하여 더 큰 변화량에 더 큰 reward가 발생하도록 해보았다.
+함수의 값의 변화량으로 reward를 주지 않고 변화량의 절대값을 한번 더 곱하여 더 큰 변화량에 더 큰 reward가 발생하도록 해보았다. 또한 매
+스텝마다 -1의 reward를 부여함.
 
 결과 분석: rastrigin에서의 학습이 더 부드럽고 정확해보임. 물론 rastrigin에서 테스트하면 둘다 안좋음
 
@@ -24,6 +25,7 @@ model load를 하고 결과 trajectory를 gif로 기록
 + 새 저점을 찾을 때 마다 높은 고정점수 주기
 + action 크기 더 늘려보기(for exploration)
 + add agent memory of episode for more state info
++ 다른 모델 사용해보기
 
 
 # Train results
