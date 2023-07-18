@@ -28,7 +28,7 @@ Trained on env1 / Test on env0
 
 Trained on env1 / Test on env1
 
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/env1%20env1.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/env1%20env1.gif)  
 Trained on env1 / Test on env2
 
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/env1%20env2.gif)
