@@ -19,9 +19,9 @@ graph
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/train%20result/env1.png)
 
 env1에서 학습 중 early stop이 발생한 경우
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/8540.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/8540.gif)  
 env1에서 학습 중 early stop이 발생하지 않은 경우
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/8756.gif)
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/8756.gif)  
 
 Trained on env1 / Test on env0
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/early_stop_1.0/gifs/env1%20env0.gif)  
