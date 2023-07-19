@@ -24,6 +24,9 @@ global optimum search using reinforcement learning on pytorch
 
 TODO:
 + 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기(early stop)
++ 프로젝트 말에 다른 경사하강 방법론과 비교해보기
++ 3차원 공간이 아닌 2차원으로 바꿀지 고민하기
++ 임의의 n개의 파라미터를 사용가능한 모델 고민해보기(attention? cuz it works for any input size)
 + 다른 방법론 사용(PPO 등)
 + local optimum problem 해결
 + 2.add agent memory of episode for more state info(more state for more info)
