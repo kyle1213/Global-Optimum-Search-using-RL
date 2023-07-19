@@ -35,7 +35,7 @@ mu = 0
 theta = 1e-3
 sigma = 2e-3
 
-load_model = False  # True for test, False for train
+load_model = True  # True for test, False for train
 load_param = False  # for continous learning
 train_mode = True if not load_model else False
 test_step = max_episode_steps
@@ -44,7 +44,7 @@ save_interval = 100
 
 date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
-load_path = f"./saved_models/env2"
+load_path = f"./saved_models/main_env1"
 
 x, y = sy.symbols('x y')
 
@@ -186,8 +186,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env1
-    Z = Z1
+    env = env2
+    Z = Z2
 
     agent = DDPGAgent()
 
@@ -285,7 +285,7 @@ if __name__ == "__main__":
                 def animate(i):
                     dx.append(agent.memory[i+len(agent.memory)-500][0][0])
                     dy.append(agent.memory[i+len(agent.memory)-500][0][1])
-                    d.set_data(dx[i], dy[i])
+                    d.set_data(dx, dy)
 
                     return d,
 
