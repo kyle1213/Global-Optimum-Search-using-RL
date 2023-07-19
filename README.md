@@ -26,8 +26,8 @@ TODO:
 + 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기(early stop)
 + 다른 방법론 사용(PPO 등)
 + local optimum problem 해결
-+ add agent memory of episode for more state info
-+ train 단계에서 동일 env가 아닌 다양한 env에서 학습하게 하기(env memorize를 예방하기 위해)
++ 2.add agent memory of episode for more state info(more state for more info)
++ 1.train 단계에서 동일 env가 아닌 다양한 env에서 학습하게 하기(env memorize를 예방하기 위해)
 
 내가 한 이상한 짓:
 + 경사하강법과 다른 방법으로 해결하는 것을 보고 싶어서 state에 x, y, env(x, y)만 넣고
@@ -38,9 +38,10 @@ TODO:
 loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 그걸 복제한 target model을 지표로 사용하는 이유를 모르겠음.  
 
 # Train results
-
-trained on env1 test env0
-
-trained on env1 test env1
-
-trained on env1 test env2
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/train%20result/env1.png)  
+trained on env1 test env0  
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env0.gif)  
+trained on env1 test env1  
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env1.gif)  
+trained on env1 test env2  
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env2.gif)  
