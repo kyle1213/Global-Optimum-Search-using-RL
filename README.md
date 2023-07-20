@@ -13,10 +13,4 @@ global optimum search using reinforcement learning on pytorch
 
 
 # Train results
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/train%20result/env1.png)  
-trained on env1 test env0  
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env0.gif)  
-trained on env1 test env1  
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env1.gif)  
-trained on env1 test env2  
-![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/gifs/env1%20env2.gif)  
+![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/2d/train%20result/160.gif)
