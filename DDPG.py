@@ -25,44 +25,33 @@ actor_lr = 1e-4
 critic_lr = 1e-5
 tau = 1e-3
 
-run_step = 300000
+run_step = 200000
 train_start_step = 5000
 
-state_size = 5
-action_size = 2
+state_size = 3
+action_size = 1
 
 mu = 0
 theta = 1e-3
 sigma = 2e-3
 
-load_model = True  # True for test, False for train
+load_model = False  # True for test, False for train
 load_param = False  # for continous learning
 train_mode = True if not load_model else False
 test_step = max_episode_steps
-print_interval = 10
 save_interval = 100
 
 date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
-load_path = f"./saved_models/main_env1"
+load_path = f"./saved_models/20230720213514"
 
-x, y = sy.symbols('x y')
+x = sy.symbols('x')
 
-Z0 = x + y
-Z1 = x ** 2 + y ** 2
-Z2 = (x ** 2 - 10 * sy.cos(2 * sy.pi * x)) + (y ** 2 - 10 * sy.cos(2 * sy.pi * y)) + 20
+Y0 = (x)**2
 
 
-def env0(x, y):  # environment
-    return x + y
-
-
-def env1(x, y):  # environment
-    return x ** 2 + y ** 2
-
-
-def env2(x, y):
-    return (x ** 2 - 10 * np.cos(2 * np.pi * x)) + (y ** 2 - 10 * np.cos(2 * np.pi * y)) + 20
+def env0(x):  # environment
+    return (x)**2
 
 
 class OU_noise:
@@ -90,7 +79,7 @@ class Actor(torch.nn.Module):
         x = torch.relu(self.fc1(state))
         x = torch.relu(self.fc2(x))
 
-        return torch.tanh(self.mu(x))/10
+        return torch.tanh(self.mu(x))
 
 
 class Critic(torch.nn.Module):
@@ -101,7 +90,7 @@ class Critic(torch.nn.Module):
         self.q = torch.nn.Linear(128, 1)
 
     def forward(self, state, action):
-        x = torch.cat((state, torch.squeeze(action)), dim=-1)
+        x = torch.cat((state, torch.unsqueeze(torch.squeeze(action), dim=1)), dim=-1)
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
 
@@ -186,8 +175,8 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env2
-    Z = Z2
+    env = env0
+    Y = Y0
 
     agent = DDPGAgent()
 
@@ -200,11 +189,9 @@ if __name__ == "__main__":
         actions = []
         reward = 0
         done = 0
-        x_init = random.uniform(-5, 5)
-        y_init = random.uniform(-5, 5)
-        states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                  float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
-        # states = [x,y,z, dx, dy]
+        x_init = random.uniform(-100, 100)
+        states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
+        # states = [x,y, dx]
         count_step = 0
 
         for step in range(run_step):
@@ -215,13 +202,11 @@ if __name__ == "__main__":
                 old_states = copy.deepcopy(states)
 
                 states[0] += actions[0][0]
-                states[1] += actions[0][1]
 
-                states[2] = env(states[0], states[1])
-                states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
-                states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
+                states[1] = env(states[0])
+                states[2] = float(sy.diff(Y, x).evalf(subs={x: states[0]}))
 
-                reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
+                reward = env(old_states[0]) - env(states[0])
                 reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
@@ -243,10 +228,8 @@ if __name__ == "__main__":
                 actions = []
                 reward = 0
                 done = 0
-                x_init = random.uniform(-5, 5)
-                y_init = random.uniform(-5, 5)
-                states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                               float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
+                x_init = random.uniform(-100, 100)
+                states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
                 count_step = 0
 
                 episode += 1
@@ -268,18 +251,19 @@ if __name__ == "__main__":
                 score = 0
 
                 # save train step gifs
-                X = np.linspace(-5.12, 5.12, 100)
-                Y = np.linspace(-5.12, 5.12, 100)
-                X, Y = np.meshgrid(X, Y)
+                X_range = np.linspace(-100, 100, 2000)
+
+                Y_values = env(X_range)
 
                 fig = plt.figure()
 
-                plt.contour(X, Y, env(X, Y), levels=15)
-                cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
-                plt.colorbar(cntr)
+                plt.plot(X_range, Y_values)
+                plt.xlabel('X')
+                plt.ylabel('Y')
+
                 d, = plt.plot([], [], 'C0o')
-                dx = []
-                dy = []
+                dx = deque(maxlen=5)
+                dy = deque(maxlen=5)
 
 
                 def animate(i):
@@ -310,10 +294,8 @@ if __name__ == "__main__":
         actions = []
         reward = 0
         done = 0
-        x_init = random.uniform(-5, 5)
-        y_init = random.uniform(-5, 5)
-        states = [x_init, y_init, env(x_init, y_init), float(sy.diff(Z, x).evalf(subs={x: x_init, y: y_init})),
-                  float(sy.diff(Z, y).evalf(subs={x: x_init, y: y_init}))]
+        x_init = random.uniform(-100, 100)
+        states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
 
         for step in range(test_step):
             if done == 0:  # not finished
@@ -322,13 +304,11 @@ if __name__ == "__main__":
                 old_states = copy.deepcopy(states)
 
                 states[0] += actions[0]
-                states[1] += actions[1]
 
-                states[2] = env(states[0], states[1])
-                states[3] = float(sy.diff(Z, x).evalf(subs={x: states[0], y: states[1]}))
-                states[4] = float(sy.diff(Z, y).evalf(subs={x: states[0], y: states[1]}))
+                states[1] = env(states[0])
+                states[2] = float(sy.diff(Y, x).evalf(subs={x: states[0]}))
 
-                reward = (env(old_states[0], old_states[1]) - env(states[0], states[1])) * abs(env(old_states[0], old_states[1]) - env(states[0], states[1]))
+                reward = env(old_states[0]) - env(states[0])
                 reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
@@ -340,29 +320,28 @@ if __name__ == "__main__":
             score += reward
 
             if done == 1:
-                X = np.linspace(-5.12, 5.12, 100)
-                Y = np.linspace(-5.12, 5.12, 100)
-                X, Y = np.meshgrid(X, Y)
+                X_range = np.linspace(-100, 100, 2000)
+
+                Y_values = env(X_range)
 
                 fig = plt.figure()
 
-                plt.contour(X, Y, env(X, Y), levels=15)
-                cntr = plt.contourf(X, Y, env(X, Y), levels=15, cmap="RdBu_r")
-                plt.colorbar(cntr)
+                plt.plot(X_range, Y_values)
+                plt.xlabel('X')
+                plt.ylabel('Y')
 
-                #  mcolors.CSS4_COLORS[list(mcolors.CSS4_COLORS.keys())[i]]
-                #  'C'+str(i)+'o'
                 d, = plt.plot([], [], 'C0o')
-                dx = []
-                dy = []
+                dx = deque(maxlen=5)
+                dy = deque(maxlen=5)
 
 
                 def animate(i):
-                    dx.append(agent.memory[i][0][0])
-                    dy.append(agent.memory[i][0][1])
-                    d.set_data(dx[i], dy[i])
+                    dx.append(agent.memory[i + len(agent.memory) - 500][0][0])
+                    dy.append(agent.memory[i + len(agent.memory) - 500][0][1])
+                    d.set_data(dx, dy)
 
                     return d,
+
 
                 anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
 
@@ -370,8 +349,7 @@ if __name__ == "__main__":
 
                 anim.save('./gifs/record.gif', writer=writer)
 
-                plt.show()
-
+                plt.close()
 
 # ##라인 지우기
 
