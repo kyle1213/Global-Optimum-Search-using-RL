@@ -45,14 +45,6 @@ date_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path = f"./saved_models/{date_time}"
 load_path = f"./saved_models/20230720213514"
 
-x = sy.symbols('x')
-
-Y0 = (x)**2
-
-
-def env0(x):  # environment
-    return (x)**2
-
 
 class OU_noise:
     def __init__(self):
@@ -175,39 +167,46 @@ class DDPGAgent():
 
 
 if __name__ == "__main__":
-    env = env0
-    Y = Y0
+    x = sy.symbols('x')
+
+    env_list = [lambda x_: x_,
+                lambda x_: x_ ** 2,
+                lambda x_: -100.0*((x_/10) + np.sin(x_/10)) * np.exp(-(x_**2.0)/10),
+                lambda x_: 10.0*(np.sin(x_/10) + np.sin((10.0 / 3.0) * x_/10)),
+                lambda x_: -50.0*((x_/10)+np.sin(x_))*np.exp(-(x_**2/10))]
+    Y_list = [x,
+              x ** 2,
+              -100.0*((x/10) + sy.sin(x/10)) * sy.exp(-(x**2.0)/10),
+              10.0*(sy.sin(x/10) + sy.sin((10.0 / 3.0) * x/10)),
+              -50.0*((x/10)+sy.sin(x))*sy.exp(-(x**2/10))]
 
     agent = DDPGAgent()
-
-    actor_losses_per_run, critic_losses_per_run = [], []
-    actor_losses, critic_losses, scores, episode, score = [], [], [], 0, 0
+    actor_losses, critic_losses, scores, episode = [], [], [], 0
     iterations = []
 
     if train_mode:
         # initialize
+        idx = random.randrange(len(env_list))
+        env = env_list[idx]
+        Y = Y_list[idx]
         actions = []
         reward = 0
         done = 0
         x_init = random.uniform(-100, 100)
         states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
-        # states = [x,y, dx]
         count_step = 0
+        actor_losses_per_run, critic_losses_per_run = [], []
+        score = 0
 
         for step in range(run_step):
             if done == 0:  # not finished
                 count_step += 1
                 actions = agent.get_action(states, train_mode)
-
                 old_states = copy.deepcopy(states)
-
                 states[0] += actions[0][0]
-
                 states[1] = env(states[0])
                 states[2] = float(sy.diff(Y, x).evalf(subs={x: states[0]}))
-
                 reward = env(old_states[0]) - env(states[0])
-                reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
@@ -225,13 +224,6 @@ if __name__ == "__main__":
             score += reward
 
             if done == 1:
-                actions = []
-                reward = 0
-                done = 0
-                x_init = random.uniform(-100, 100)
-                states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
-                count_step = 0
-
                 episode += 1
                 scores.append(score)
 
@@ -248,23 +240,17 @@ if __name__ == "__main__":
                     agent.save_model()
 
                 iterations.append(step)
-                score = 0
 
                 # save train step gifs
                 X_range = np.linspace(-100, 100, 2000)
-
                 Y_values = env(X_range)
-
                 fig = plt.figure()
-
                 plt.plot(X_range, Y_values)
                 plt.xlabel('X')
                 plt.ylabel('Y')
-
                 d, = plt.plot([], [], 'C0o')
                 dx = deque(maxlen=5)
                 dy = deque(maxlen=5)
-
 
                 def animate(i):
                     dx.append(agent.memory[i+len(agent.memory)-500][0][0])
@@ -272,14 +258,23 @@ if __name__ == "__main__":
                     d.set_data(dx, dy)
 
                     return d,
-
                 anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
-
                 writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-
                 anim.save('./gifs/'+str(episode)+'.gif', writer=writer)
-
                 plt.close()
+
+                # reinitialize
+                idx = random.randrange(len(env_list))
+                env = env_list[idx]
+                Y = Y_list[idx]
+                actions = []
+                reward = 0
+                done = 0
+                x_init = random.uniform(-100, 100)
+                states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
+                count_step = 0
+                actor_losses_per_run, critic_losses_per_run = [], []
+                score = 0
 
         plt.subplot(121)
         plt.plot(range(1, len(iterations) + 1), actor_losses, 'b--')
@@ -291,25 +286,26 @@ if __name__ == "__main__":
 
     else:  # test mode
         # initialize
+        idx = random.randrange(len(env_list))
+        env = env_list[idx]
+        Y = Y_list[idx]
         actions = []
         reward = 0
         done = 0
         x_init = random.uniform(-100, 100)
         states = [x_init, env(x_init), float(sy.diff(Y, x).evalf(subs={x: x_init}))]
+        count_step = 0
+        actor_losses_per_run, critic_losses_per_run = [], []
+        score = 0
 
         for step in range(test_step):
             if done == 0:  # not finished
                 actions = agent.get_action(states, train_mode)
-
                 old_states = copy.deepcopy(states)
-
                 states[0] += actions[0]
-
                 states[1] = env(states[0])
                 states[2] = float(sy.diff(Y, x).evalf(subs={x: states[0]}))
-
                 reward = env(old_states[0]) - env(states[0])
-                reward -= 1
 
                 ## if 모델이 충분히 최저점에 왔다고 판별을 하면 그만하기, +신경망으로 판별네트워크도 만들어야함
 
@@ -321,19 +317,14 @@ if __name__ == "__main__":
 
             if done == 1:
                 X_range = np.linspace(-100, 100, 2000)
-
                 Y_values = env(X_range)
-
                 fig = plt.figure()
-
                 plt.plot(X_range, Y_values)
                 plt.xlabel('X')
                 plt.ylabel('Y')
-
                 d, = plt.plot([], [], 'C0o')
                 dx = deque(maxlen=5)
                 dy = deque(maxlen=5)
-
 
                 def animate(i):
                     dx.append(agent.memory[i + len(agent.memory) - 500][0][0])
@@ -341,14 +332,9 @@ if __name__ == "__main__":
                     d.set_data(dx, dy)
 
                     return d,
-
-
                 anim = animation.FuncAnimation(fig, animate, frames=test_step, interval=100)
-
                 writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-
                 anim.save('./gifs/record.gif', writer=writer)
-
                 plt.close()
 
 # ##라인 지우기
