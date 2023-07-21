@@ -3,7 +3,7 @@ global optimum search using reinforcement learning on pytorch
 
 구현 방법:
 + RL model: DDPG(actor-critic)
-+ reward: dy, -1 each step,
++ reward: dy
 + actions: x
 + state: (x, y, dx)
 + env: random 1 variable function
