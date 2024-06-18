@@ -3,7 +3,8 @@ global optimum search using reinforcement learning on pytorch
 
 프로젝트 내용:
 + 강화학습을 이용하여 3차원 공간에서 최저점(일종의 global optimum)을 찾는 에이전트를 학습시키기  
-+ 추후에 딥러닝의 경사하강법 대신 이 에이전트를 적용하여 학습시켜볼 예정  
++ 추후에 딥러닝의 경사하강법 대신 이 에이전트를 적용하여 학습시켜볼 예정
++ 해당 프로젝트를 진행한 가장 큰 이유는, 강화학습을 공부하며 에이전트가 경사하강법이라는 알고리즘을 근사 또는 넘어설 수 있을지 궁금하고 재밌어 보였음(효율성은 구현 완료 후 고민할 예정)
 
 기능:
 + RL모델 학습
@@ -23,6 +24,8 @@ global optimum search using reinforcement learning on pytorch
 + env2에서 test할 때는 local optimum에 빠지는 것을 보니, agent가 단순히 coordinate으로만 행동하지는 않고, slope도 활용하기는 하는 것 같다.
 
 TODO:
++ 행동 공간을 더 다양하게 하는 설계 고민하기
++ 더 고차원에서의 자원 소모에 대한 고민하기
 + 신경망으로 에이전트가 만족하면 탐색 중단하는 기능 추가해보기(early stop)
 + 프로젝트 말에 다른 경사하강 방법론과 비교해보기
 + 3차원 공간이 아닌 2차원으로 바꿀지 고민하기
@@ -38,7 +41,7 @@ TODO:
 
 모르겠는 거:
 + loss의 수치 해석, ddpg의 critic은, 결국 자신의 복제본인 target model의 q-value의 bellman equation을
-loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 그걸 복제한 target model을 지표로 사용하는 이유를 모르겠음.  
+loss의 지표로 사용하는데 메인 모델도 학습이 다 안됬는데 그걸 복제한 target model을 지표로 사용하는 이유를 모르겠음. -> 구글 검색하면 bellman 최적 방정식의 수렴 증명을 알 수 있다.  
 
 # Train results
 ![](https://github.com/kyle1213/Global-Optimum-Search-using-RL/blob/main/train%20result/env1.png)  
