@@ -17,31 +17,30 @@ import sympy as sy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-config = {
+ou_noise_config = {
     'OU_noise_mu': 0,
     'OU_noise_theta': 1e-3,
-    'OU_noise_sigma': 2e-3,
-
+    'OU_noise_sigma': 2e-3
 }
 
-max_episode_steps = 5000
-batch_size = 128
-mem_maxlen = 25000
-discount_factor = 0.99
-actor_lr = 1e-4
-critic_lr = 1e-5
-tau = 1e-3
-
-run_step = 3000000
-train_start_step = 20000
-
-state_size = 5
-action_size = 2
+model_config = {
+    'max_episode_steps': 5000,
+    'batch_size': 128,
+    'mem_maxlen': 25000,
+    'discount_factor': 0.99,
+    'actor_lr': 1e-4,
+    'critic_lr': 1e-5,
+    'tau': 1e-3,
+    'run_step': 3000000,
+    'train_start_step': 20000,
+    'state_size': 5,
+    'action_size': 2,
+}
 
 load_model = False  # True for test, False for train
 load_param = False  # for continous learning
 train_mode = True if not load_model else False
-test_step = max_episode_steps
+test_step = model_config['max_episode_steps']
 print_interval = 10
 save_interval = 100
 
